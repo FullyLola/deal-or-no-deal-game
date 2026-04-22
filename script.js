@@ -9,7 +9,7 @@ let opened = [];
 let playerCase = null;
 
 let round = 0;
-const roundSteps = [6,5,4,3,2,1];
+const roundSteps = [6,5,4,3,2,1,1,1];
 
 /* ---------------- START ---------------- */
 function startGame() {
