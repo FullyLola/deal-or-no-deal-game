@@ -11,7 +11,7 @@ let playerCase = null;
 let round = 0;
 const roundSteps = [6,5,4,3,2,1,1,1,1];
 
-let finalPhaseTriggered = false;
+let enteringFinalRound = false;
 
 /* START */
 function startGame() {
@@ -19,7 +19,7 @@ function startGame() {
   opened = [];
   playerCase = null;
   round = 0;
-  finalPhaseTriggered = false;
+  enteringFinalRound = false;
 
   document.getElementById("controls").style.display = "none";
   document.getElementById("endgame").style.display = "none";
@@ -40,12 +40,14 @@ function renderCases() {
     let div = document.createElement("div");
     div.className = "case";
     div.innerText = index + 1;
+
     div.onclick = () => handleCaseClick(index, div);
+
     casesDiv.appendChild(div);
   });
 }
 
-/* REMAINING */
+/* HELPERS */
 function getRemainingIndexes() {
   return shuffled.map((_, i) => i)
     .filter(i => !opened.includes(i));
@@ -71,21 +73,14 @@ function handleCaseClick(index, div) {
   div.classList.add("opened");
   div.innerText = "$" + shuffled[index];
 
-  document.getElementById("revealSound").play();
-
   updateCounter();
   updateRemainingCounter();
   updateTracker();
 
   let remaining = getRemainingIndexes();
 
-  if (remaining.length === 3 && !finalPhaseTriggered) {
-    finalPhaseTriggered = true;
-    alert("Final Round: Open 1 more case!");
-    return;
-  }
-
-  if (remaining.length === 2) {
+  /* ROUND 9 LOGIC: open 1 case then go to final decision */
+  if (round === 8) {
     document.getElementById("endgame").style.display = "block";
     return;
   }
@@ -141,18 +136,26 @@ function deal() {
 
 /* NO DEAL */
 function noDeal() {
-  let remaining = getRemainingIndexes();
+  document.getElementById("controls").style.display = "none";
 
-  if (remaining.length <= 3) return;
+  // 🔴 AFTER ROUND 8 → ENTER ROUND 9
+  if (round === 7) {
+    alert("Final Round! Open 1 of the last 3 cases.");
+    round = 8;
+    updateRound();
+    updateCounter();
+    return;
+  }
+
+  // stop progressing after round 9
+  if (round >= 8) return;
 
   round++;
   updateRound();
   updateCounter();
-
-  document.getElementById("controls").style.display = "none";
 }
 
-/* ROUND */
+/* ROUND DISPLAY */
 function updateRound() {
   document.getElementById("round").innerText =
     "Round " + (round + 1) +
@@ -169,7 +172,7 @@ function swapCase() {
   }
 
   let other = remaining.find(i => i !== playerCase);
-  alert("You won $" + shuffled[other]);
+  alert("You swapped and won $" + shuffled[other]);
 }
 
 /* KEEP */
