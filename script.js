@@ -81,8 +81,10 @@ function makeOffer() {
 
   let avg = sum / count;
 
-  // FIXED FORMULA (stable + playable)
-  let offer = avg * (round / 9);
+  // IMPORTANT FIX: prevent round = 0 issue
+  let roundMultiplier = (round + 1) / 9;
+
+  let offer = avg * roundMultiplier;
 
   offer = Math.round(offer);
 
