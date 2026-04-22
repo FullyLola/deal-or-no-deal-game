@@ -13,7 +13,7 @@ const roundSteps = [6,5,4,3,2,1,1,1,1];
 
 let finalPhaseTriggered = false;
 
-/* ---------------- START ---------------- */
+/* START */
 function startGame() {
   shuffled = [...values].sort(() => Math.random() - 0.5);
   opened = [];
@@ -27,10 +27,11 @@ function startGame() {
   renderCases();
   updateRound();
   updateCounter();
+  updateRemainingCounter();
   updateTracker();
 }
 
-/* ---------------- RENDER ---------------- */
+/* RENDER */
 function renderCases() {
   const casesDiv = document.getElementById("cases");
   casesDiv.innerHTML = "";
@@ -39,30 +40,27 @@ function renderCases() {
     let div = document.createElement("div");
     div.className = "case";
     div.innerText = index + 1;
-
     div.onclick = () => handleCaseClick(index, div);
-
     casesDiv.appendChild(div);
   });
 }
 
-/* ---------------- REMAINING ---------------- */
+/* REMAINING */
 function getRemainingIndexes() {
   return shuffled.map((_, i) => i)
     .filter(i => !opened.includes(i));
 }
 
-/* ---------------- CLICK ---------------- */
+/* CLICK */
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
-  // choose player case
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
     div.innerText = "YOUR";
-    updateTracker();
     updateCounter();
+    updateRemainingCounter();
     return;
   }
 
@@ -76,37 +74,28 @@ function handleCaseClick(index, div) {
   document.getElementById("revealSound").play();
 
   updateCounter();
+  updateRemainingCounter();
   updateTracker();
 
   let remaining = getRemainingIndexes();
 
-  /* 🔴 FINAL 3 CASE PHASE */
   if (remaining.length === 3 && !finalPhaseTriggered) {
     finalPhaseTriggered = true;
-
-    document.getElementById("controls").style.display = "none";
-
-    setTimeout(() => {
-      alert("Final Round: Open 1 more case!");
-    }, 200);
-
+    alert("Final Round: Open 1 more case!");
     return;
   }
 
-  /* 🔴 AFTER FINAL 3 → GO TO ENDGAME */
   if (remaining.length === 2) {
     document.getElementById("endgame").style.display = "block";
-    document.getElementById("controls").style.display = "none";
     return;
   }
 
-  /* NORMAL ROUND FLOW */
   if (openedSinceRound() >= roundSteps[round]) {
     makeOffer();
   }
 }
 
-/* ---------------- COUNTER ---------------- */
+/* COUNTERS */
 function openedSinceRound() {
   let before = roundSteps.slice(0, round).reduce((a,b)=>a+b,0);
   return opened.length - before;
@@ -117,7 +106,13 @@ function updateCounter() {
     "Cases opened this round: " + openedSinceRound();
 }
 
-/* ---------------- BANKER ---------------- */
+function updateRemainingCounter() {
+  let remaining = shuffled.length - opened.length;
+  document.getElementById("remaining").innerText =
+    "Unopened cases: " + remaining;
+}
+
+/* BANKER */
 function makeOffer() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
@@ -136,66 +131,58 @@ function makeOffer() {
     "Banker Offer: $" + Math.round(offer);
 
   document.getElementById("controls").style.display = "block";
-  document.getElementById("offerSound").play();
 }
 
-/* ---------------- DEAL ---------------- */
+/* DEAL */
 function deal() {
   document.getElementById("finalText").innerText = "DEAL!";
   document.getElementById("endgame").style.display = "block";
-  document.getElementById("controls").style.display = "none";
 }
 
-/* ---------------- NO DEAL ---------------- */
+/* NO DEAL */
 function noDeal() {
   let remaining = getRemainingIndexes();
 
-  // stop advancing rounds once near end
-  if (remaining.length <= 3) {
-    document.getElementById("controls").style.display = "none";
-    return;
-  }
+  if (remaining.length <= 3) return;
 
   round++;
-
   updateRound();
   updateCounter();
-  updateTracker();
 
   document.getElementById("controls").style.display = "none";
 }
 
-/* ---------------- ROUND DISPLAY ---------------- */
+/* ROUND */
 function updateRound() {
   document.getElementById("round").innerText =
     "Round " + (round + 1) +
     " (Open " + roundSteps[round] + ")";
 }
 
-/* ---------------- SWAP ---------------- */
+/* SWAP */
 function swapCase() {
   let remaining = getRemainingIndexes();
 
   if (remaining.length !== 2) {
-    alert("Swap only allowed at final 2 cases!");
+    alert("Swap only allowed at final 2!");
     return;
   }
 
-  let otherIndex = remaining.find(i => i !== playerCase);
-  alert("You swapped and won $" + shuffled[otherIndex]);
+  let other = remaining.find(i => i !== playerCase);
+  alert("You won $" + shuffled[other]);
 }
 
-/* ---------------- KEEP ---------------- */
+/* KEEP */
 function revealFinal() {
   alert("Your case had $" + shuffled[playerCase]);
 }
 
-/* ---------------- RESET ---------------- */
+/* RESET */
 function resetGame() {
   startGame();
 }
 
-/* ---------------- TRACKER ---------------- */
+/* TRACKER */
 function updateTracker() {
   let sorted = [...values];
   let mid = Math.ceil(sorted.length / 2);
@@ -214,5 +201,5 @@ function updateTracker() {
     ).join("");
 }
 
-/* ---------------- INIT ---------------- */
+/* INIT */
 startGame();
