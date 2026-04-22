@@ -5,12 +5,18 @@
   <title>Deal or No Deal</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <h1>Deal or No Deal</h1>
 
-<h2 id="round">Round 1</h2>
+<h2 id="round"></h2>
 <h2 id="offer">Banker Offer: $0</h2>
+
+<!-- THIS IS REQUIRED FOR CASES -->
+<div id="cases"></div>
+
+<!-- TRACKER -->
 <div id="tracker">
   <div class="column">
     <h3>HIGH VALUES</h3>
@@ -22,14 +28,14 @@
     <ul id="lowList"></ul>
   </div>
 </div>
-  
-<div id="cases"></div>
 
+<!-- CONTROLS -->
 <div id="controls" style="display:none;">
   <button onclick="deal()">DEAL</button>
   <button onclick="noDeal()">NO DEAL</button>
 </div>
 
+<!-- END GAME -->
 <div id="endgame" style="display:none;">
   <h2 id="finalText"></h2>
   <button onclick="swapCase()">SWAP CASE</button>
@@ -38,9 +44,15 @@
 
 <button onclick="resetGame()">New Game</button>
 
-<audio id="revealSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
-<audio id="offerSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<!-- SOUNDS -->
+<audio id="revealSound"
+ src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
+<audio id="offerSound"
+ src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+
+<!-- IMPORTANT: script at bottom -->
 <script src="script.js"></script>
+
 </body>
 </html>
