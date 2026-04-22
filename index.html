@@ -8,11 +8,27 @@
 <body>
 
 <h1>Deal or No Deal</h1>
+
+<h2 id="round">Round 1</h2>
 <h2 id="offer">Banker Offer: $0</h2>
 
 <div id="cases"></div>
 
+<div id="controls">
+  <button onclick="deal()">DEAL</button>
+  <button onclick="noDeal()">NO DEAL</button>
+</div>
+
+<div id="endgame" style="display:none;">
+  <h2 id="finalText"></h2>
+  <button onclick="swapCase()">SWAP CASE</button>
+  <button onclick="revealFinal()">KEEP CASE</button>
+</div>
+
 <button onclick="resetGame()">New Game</button>
+
+<audio id="revealSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+<audio id="offerSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
 
 <script src="script.js"></script>
 </body>
