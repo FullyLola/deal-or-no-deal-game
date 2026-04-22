@@ -17,6 +17,7 @@ function startGame() {
   shuffled = [...values].sort(() => Math.random() - 0.5);
   opened = [];
   playerCase = null;
+
   round = 0;
   casesOpenedThisRound = 0;
 
@@ -43,11 +44,11 @@ function renderCases() {
   });
 }
 
-// CLICK CASE
+// HANDLE CASE CLICK
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
-  // choose player case first
+  // pick player case first
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
@@ -70,77 +71,14 @@ function handleCaseClick(index, div) {
   }
 }
 
-// BANKER OFFER (your formula)
+// 🔥 BANKER (REALISTIC GAME CURVE)
 function makeOffer() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
 
   let sum = remaining.reduce((a, b) => a + b, 0);
-  let count = remaining.length;
+  let avg = sum / remaining.length;
 
-  let avg = sum / count;
-
-  // IMPORTANT FIX: prevent round = 0 issue
-  let roundMultiplier = (round + 1) / 9;
-
-  let offer = avg * roundMultiplier;
-
-  offer = Math.round(offer);
-
-  document.getElementById("offer").innerText =
-    "Banker Offer: $" + offer;
-
-  document.getElementById("controls").style.display = "block";
-
-  document.getElementById("offerSound").play();
-}
-
-// DEAL
-function deal() {
-  document.getElementById("finalText").innerText =
-    "You took the DEAL!";
-  document.getElementById("endgame").style.display = "block";
-  document.getElementById("controls").style.display = "none";
-}
-
-// NO DEAL
-function noDeal() {
-  round++;
-  casesOpenedThisRound = 0;
-
-  updateRound();
-  document.getElementById("controls").style.display = "none";
-
-  if (round >= roundSteps.length) {
-    document.getElementById("endgame").style.display = "block";
-  }
-}
-
-// ROUND UI
-function updateRound() {
-  document.getElementById("round").innerText =
-    "Round " + (round + 1) +
-    " (Open " + roundSteps[round] + " cases)";
-}
-
-// SWAP FINAL CASE
-function swapCase() {
-  let remaining = shuffled.filter((_, i) =>
-    !opened.includes(i) && i !== playerCase
-  );
-
-  alert("You swapped and won $" + remaining[0]);
-}
-
-// KEEP CASE
-function revealFinal() {
-  alert("Your case contained $" + shuffled[playerCase]);
-}
-
-// RESET
-function resetGame() {
-  startGame();
-}
-
-startGame();
+  // remaining board value (key improvement)
+  let max = Math
