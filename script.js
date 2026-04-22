@@ -26,6 +26,7 @@ function startGame() {
 
   renderCases();
   updateRound();
+  updateCounter();
   updateTracker();
 }
 
@@ -67,11 +68,18 @@ function handleCaseClick(index, div) {
 
   document.getElementById("revealSound").play();
 
+  updateCounter();
   updateTracker();
 
   if (casesOpenedThisRound >= roundSteps[round]) {
     makeOffer();
   }
+}
+
+/* ---------------- COUNTER ---------------- */
+function updateCounter() {
+  document.getElementById("counter").innerText =
+    "Cases opened this round: " + casesOpenedThisRound;
 }
 
 /* ---------------- BANKER ---------------- */
@@ -84,7 +92,6 @@ function makeOffer() {
   let avg = sum / remaining.length;
 
   let progression = round / (roundSteps.length - 1);
-
   let multiplier = 0.08 + Math.pow(progression, 2) * 0.95;
 
   let offer = avg * multiplier;
@@ -117,6 +124,7 @@ function noDeal() {
   casesOpenedThisRound = 0;
 
   updateRound();
+  updateCounter();
   updateTracker();
 
   document.getElementById("controls").style.display = "none";
@@ -136,13 +144,20 @@ function updateRound() {
 /* ---------------- SWAP ---------------- */
 function swapCase() {
   let remaining = shuffled.filter((_, i) =>
-    !opened.includes(i) && i !== playerCase
+    !opened.includes(i)
   );
 
-  alert("You swapped and won $" + remaining[0]);
+  if (remaining.length !== 2) {
+    alert("Swap only allowed when 2 cases remain!");
+    return;
+  }
+
+  let other = remaining.find(v => v !== shuffled[playerCase]);
+
+  alert("You swapped and won $" + other);
 }
 
-/* ---------------- REVEAL ---------------- */
+/* ---------------- FINAL ---------------- */
 function revealFinal() {
   alert("Your case contained $" + shuffled[playerCase]);
 }
@@ -152,12 +167,8 @@ function resetGame() {
   startGame();
 }
 
-/* ---------------- TRACKER (CROSS OFF + LEFT/RIGHT) ---------------- */
+/* ---------------- TRACKER ---------------- */
 function updateTracker() {
-  let remaining = shuffled.filter((_, i) =>
-    !opened.includes(i) && i !== playerCase
-  );
-
   let sorted = [...values];
 
   let mid = Math.ceil(sorted.length / 2);
