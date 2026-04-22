@@ -10,7 +10,6 @@ let playerCase = null;
 
 let round = 0;
 const roundSteps = [6,5,4,3,2,1];
-let casesOpenedThisRound = 0;
 
 /* ---------------- START ---------------- */
 function startGame() {
@@ -19,7 +18,6 @@ function startGame() {
   playerCase = null;
 
   round = 0;
-  casesOpenedThisRound = 0;
 
   document.getElementById("controls").style.display = "none";
   document.getElementById("endgame").style.display = "none";
@@ -30,7 +28,7 @@ function startGame() {
   updateTracker();
 }
 
-/* ---------------- CASES ---------------- */
+/* ---------------- CASE GRID ---------------- */
 function renderCases() {
   const casesDiv = document.getElementById("cases");
   casesDiv.innerHTML = "";
@@ -46,22 +44,32 @@ function renderCases() {
   });
 }
 
-/* ---------------- CLICK ---------------- */
+/* ---------------- FINAL PHASE CHECK ---------------- */
+function isFinalPhase() {
+  let remaining = shuffled.filter((_, i) =>
+    !opened.includes(i) && i !== playerCase
+  );
+
+  return remaining.length <= 2;
+}
+
+/* ---------------- CLICK CASE ---------------- */
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
+  // choose player case
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
     div.innerText = "YOUR CASE";
     updateTracker();
+    updateCounter();
     return;
   }
 
   if (index === playerCase) return;
 
   opened.push(index);
-  casesOpenedThisRound++;
 
   div.classList.add("opened");
   div.innerText = "$" + shuffled[index];
@@ -71,15 +79,24 @@ function handleCaseClick(index, div) {
   updateCounter();
   updateTracker();
 
-  if (casesOpenedThisRound >= roundSteps[round]) {
+  // FINAL PHASE: immediate offer after every case
+  if (isFinalPhase()) {
+    setTimeout(makeOffer, 300);
+  }
+  else if (openedSinceRound() >= roundSteps[round]) {
     makeOffer();
   }
 }
 
 /* ---------------- COUNTER ---------------- */
+function openedSinceRound() {
+  let before = roundSteps.slice(0, round).reduce((a,b)=>a+b,0);
+  return opened.length - before;
+}
+
 function updateCounter() {
   document.getElementById("counter").innerText =
-    "Cases opened this round: " + casesOpenedThisRound;
+    "Cases opened this round: " + openedSinceRound();
 }
 
 /* ---------------- BANKER ---------------- */
@@ -120,18 +137,25 @@ function deal() {
 
 /* ---------------- NO DEAL ---------------- */
 function noDeal() {
+  let remaining = shuffled.filter((_, i) =>
+    !opened.includes(i) && i !== playerCase
+  );
+
+  // FINAL PHASE: no round progression
+  if (remaining.length <= 2) {
+    updateCounter();
+    updateTracker();
+    document.getElementById("controls").style.display = "none";
+    return;
+  }
+
   round++;
-  casesOpenedThisRound = 0;
 
   updateRound();
   updateCounter();
   updateTracker();
 
   document.getElementById("controls").style.display = "none";
-
-  if (round >= roundSteps.length) {
-    document.getElementById("endgame").style.display = "block";
-  }
 }
 
 /* ---------------- ROUND ---------------- */
@@ -141,7 +165,7 @@ function updateRound() {
     " (Open " + roundSteps[round] + " cases)";
 }
 
-/* ---------------- SWAP ---------------- */
+/* ---------------- SWAP RULE ---------------- */
 function swapCase() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i)
@@ -157,7 +181,7 @@ function swapCase() {
   alert("You swapped and won $" + other);
 }
 
-/* ---------------- FINAL ---------------- */
+/* ---------------- FINAL REVEAL ---------------- */
 function revealFinal() {
   alert("Your case contained $" + shuffled[playerCase]);
 }
