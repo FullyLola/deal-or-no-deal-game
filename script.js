@@ -11,12 +11,11 @@ let playerCase = null;
 let round = 0;
 const roundSteps = [6,5,4,3,2,1,1,1,1];
 
-/* ---------------- START ---------------- */
+/* START */
 function startGame() {
   shuffled = [...values].sort(() => Math.random() - 0.5);
   opened = [];
   playerCase = null;
-
   round = 0;
 
   document.getElementById("controls").style.display = "none";
@@ -28,12 +27,12 @@ function startGame() {
   updateTracker();
 }
 
-/* ---------------- CASE GRID ---------------- */
+/* RENDER */
 function renderCases() {
   const casesDiv = document.getElementById("cases");
   casesDiv.innerHTML = "";
 
-  shuffled.forEach((value, index) => {
+  shuffled.forEach((_, index) => {
     let div = document.createElement("div");
     div.className = "case";
     div.innerText = index + 1;
@@ -44,24 +43,22 @@ function renderCases() {
   });
 }
 
-/* ---------------- FINAL PHASE CHECK ---------------- */
+/* FINAL PHASE */
 function isFinalPhase() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
-
   return remaining.length <= 2;
 }
 
-/* ---------------- CLICK CASE ---------------- */
+/* CLICK */
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
-  // choose player case
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
-    div.innerText = "YOUR CASE";
+    div.innerText = "YOUR";
     updateTracker();
     updateCounter();
     return;
@@ -79,16 +76,14 @@ function handleCaseClick(index, div) {
   updateCounter();
   updateTracker();
 
-  // FINAL PHASE: immediate offer after every case
   if (isFinalPhase()) {
     setTimeout(makeOffer, 300);
-  }
-  else if (openedSinceRound() >= roundSteps[round]) {
+  } else if (openedSinceRound() >= roundSteps[round]) {
     makeOffer();
   }
 }
 
-/* ---------------- COUNTER ---------------- */
+/* COUNTER */
 function openedSinceRound() {
   let before = roundSteps.slice(0, round).reduce((a,b)=>a+b,0);
   return opened.length - before;
@@ -99,58 +94,47 @@ function updateCounter() {
     "Cases opened this round: " + openedSinceRound();
 }
 
-/* ---------------- BANKER ---------------- */
+/* BANKER */
 function makeOffer() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
 
-  let sum = remaining.reduce((a, b) => a + b, 0);
-  let avg = sum / remaining.length;
+  let avg = remaining.reduce((a,b)=>a+b,0) / remaining.length;
 
   let progression = round / (roundSteps.length - 1);
   let multiplier = 0.08 + Math.pow(progression, 2) * 0.95;
 
   let offer = avg * multiplier;
 
-  if (remaining.length <= 5) {
-    offer = avg * 1.1;
-  }
-
-  offer = Math.round(offer);
+  if (remaining.length <= 5) offer = avg * 1.1;
 
   document.getElementById("offer").innerText =
-    "Banker Offer: $" + offer;
+    "Banker Offer: $" + Math.round(offer);
 
   document.getElementById("controls").style.display = "block";
-
   document.getElementById("offerSound").play();
 }
 
-/* ---------------- DEAL ---------------- */
+/* DEAL */
 function deal() {
-  document.getElementById("finalText").innerText =
-    "You took the DEAL!";
+  document.getElementById("finalText").innerText = "DEAL!";
   document.getElementById("endgame").style.display = "block";
   document.getElementById("controls").style.display = "none";
 }
 
-/* ---------------- NO DEAL ---------------- */
+/* NO DEAL */
 function noDeal() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
 
-  // FINAL PHASE: no round progression
   if (remaining.length <= 2) {
-    updateCounter();
-    updateTracker();
     document.getElementById("controls").style.display = "none";
     return;
   }
 
   round++;
-
   updateRound();
   updateCounter();
   updateTracker();
@@ -158,61 +142,56 @@ function noDeal() {
   document.getElementById("controls").style.display = "none";
 }
 
-/* ---------------- ROUND ---------------- */
+/* ROUND */
 function updateRound() {
   document.getElementById("round").innerText =
     "Round " + (round + 1) +
-    " (Open " + roundSteps[round] + " cases)";
+    " (Open " + roundSteps[round] + ")";
 }
 
-/* ---------------- SWAP RULE ---------------- */
+/* SWAP */
 function swapCase() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i)
   );
 
   if (remaining.length !== 2) {
-    alert("Swap only allowed when 2 cases remain!");
+    alert("Swap only allowed at final 2 cases!");
     return;
   }
 
   let other = remaining.find(v => v !== shuffled[playerCase]);
-
-  alert("You swapped and won $" + other);
+  alert("You won $" + other);
 }
 
-/* ---------------- FINAL REVEAL ---------------- */
+/* FINAL */
 function revealFinal() {
-  alert("Your case contained $" + shuffled[playerCase]);
+  alert("Your case had $" + shuffled[playerCase]);
 }
 
-/* ---------------- RESET ---------------- */
+/* RESET */
 function resetGame() {
   startGame();
 }
 
-/* ---------------- TRACKER ---------------- */
+/* TRACKER */
 function updateTracker() {
   let sorted = [...values];
-
   let mid = Math.ceil(sorted.length / 2);
-
-  let low = sorted.slice(0, mid);
-  let high = sorted.slice(mid);
 
   const isOpened = (val) =>
     opened.some(i => shuffled[i] === val);
 
   document.getElementById("lowList").innerHTML =
-    low.map(v =>
+    sorted.slice(0, mid).map(v =>
       `<li class="${isOpened(v) ? "crossed" : ""}">$${v}</li>`
     ).join("");
 
   document.getElementById("highList").innerHTML =
-    high.map(v =>
+    sorted.slice(mid).map(v =>
       `<li class="${isOpened(v) ? "crossed" : ""}">$${v}</li>`
     ).join("");
 }
 
-/* ---------------- INIT ---------------- */
+/* INIT */
 startGame();
