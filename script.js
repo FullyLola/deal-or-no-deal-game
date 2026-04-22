@@ -12,7 +12,7 @@ let round = 0;
 const roundSteps = [6,5,4,3,2,1];
 let casesOpenedThisRound = 0;
 
-// START GAME
+/* ---------------- START GAME ---------------- */
 function startGame() {
   shuffled = [...values].sort(() => Math.random() - 0.5);
   opened = [];
@@ -26,9 +26,10 @@ function startGame() {
 
   renderCases();
   updateRound();
+  updateTracker();
 }
 
-// RENDER CASES
+/* ---------------- RENDER CASES ---------------- */
 function renderCases() {
   const casesDiv = document.getElementById("cases");
   casesDiv.innerHTML = "";
@@ -44,15 +45,16 @@ function renderCases() {
   });
 }
 
-// HANDLE CASE CLICK
+/* ---------------- CASE CLICK ---------------- */
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
-  // pick player case first
+  // select player case
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
     div.innerText = "YOUR CASE";
+    updateTracker();
     return;
   }
 
@@ -66,12 +68,14 @@ function handleCaseClick(index, div) {
 
   document.getElementById("revealSound").play();
 
+  updateTracker();
+
   if (casesOpenedThisRound >= roundSteps[round]) {
     makeOffer();
   }
 }
 
-// 🔥 BANKER (REALISTIC GAME CURVE)
+/* ---------------- BANKER OFFER ---------------- */
 function makeOffer() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
@@ -80,5 +84,98 @@ function makeOffer() {
   let sum = remaining.reduce((a, b) => a + b, 0);
   let avg = sum / remaining.length;
 
-  // remaining board value (key improvement)
-  let max = Math
+  // smooth game-show style curve
+  let progression = round / (roundSteps.length - 1);
+
+  let multiplier = 0.08 + Math.pow(progression, 2) * 0.95;
+
+  let offer = avg * multiplier;
+
+  // late-game boost
+  if (remaining.length <= 5) {
+    offer = avg * 1.1;
+  }
+
+  offer = Math.round(offer);
+
+  document.getElementById("offer").innerText =
+    "Banker Offer: $" + offer;
+
+  document.getElementById("controls").style.display = "block";
+
+  document.getElementById("offerSound").play();
+}
+
+/* ---------------- DEAL ---------------- */
+function deal() {
+  document.getElementById("finalText").innerText =
+    "You took the DEAL!";
+  document.getElementById("endgame").style.display = "block";
+  document.getElementById("controls").style.display = "none";
+}
+
+/* ---------------- NO DEAL ---------------- */
+function noDeal() {
+  round++;
+  casesOpenedThisRound = 0;
+
+  updateRound();
+  updateTracker();
+
+  document.getElementById("controls").style.display = "none";
+
+  if (round >= roundSteps.length) {
+    document.getElementById("endgame").style.display = "block";
+  }
+}
+
+/* ---------------- ROUND DISPLAY ---------------- */
+function updateRound() {
+  document.getElementById("round").innerText =
+    "Round " + (round + 1) +
+    " (Open " + roundSteps[round] + " cases)";
+}
+
+/* ---------------- FINAL SWAP ---------------- */
+function swapCase() {
+  let remaining = shuffled.filter((_, i) =>
+    !opened.includes(i) && i !== playerCase
+  );
+
+  alert("You swapped and won $" + remaining[0]);
+}
+
+/* ---------------- REVEAL FINAL ---------------- */
+function revealFinal() {
+  alert("Your case contained $" + shuffled[playerCase]);
+}
+
+/* ---------------- RESET ---------------- */
+function resetGame() {
+  startGame();
+}
+
+/* ---------------- TRACKER (HIGH / LOW BOARD) ---------------- */
+function updateTracker() {
+  let remaining = shuffled.filter((_, i) =>
+    !opened.includes(i) && i !== playerCase
+  );
+
+  if (remaining.length === 0) return;
+
+  let sorted = [...remaining].sort((a, b) => a - b);
+
+  let mid = Math.ceil(sorted.length / 2);
+
+  let low = sorted.slice(0, mid);
+  let high = sorted.slice(mid).reverse();
+
+  document.getElementById("lowList").innerHTML =
+    low.map(v => `<li>$${v}</li>`).join("");
+
+  document.getElementById("highList").innerHTML =
+    high.map(v => `<li>$${v}</li>`).join("");
+}
+
+/* ---------------- INIT ---------------- */
+startGame();
