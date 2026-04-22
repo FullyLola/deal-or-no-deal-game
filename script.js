@@ -12,7 +12,7 @@ let round = 0;
 const roundSteps = [6,5,4,3,2,1];
 let casesOpenedThisRound = 0;
 
-/* ---------------- START GAME ---------------- */
+/* ---------------- START ---------------- */
 function startGame() {
   shuffled = [...values].sort(() => Math.random() - 0.5);
   opened = [];
@@ -21,15 +21,15 @@ function startGame() {
   round = 0;
   casesOpenedThisRound = 0;
 
-  document.getElementById("endgame").style.display = "none";
   document.getElementById("controls").style.display = "none";
+  document.getElementById("endgame").style.display = "none";
 
   renderCases();
   updateRound();
   updateTracker();
 }
 
-/* ---------------- RENDER CASES ---------------- */
+/* ---------------- CASES ---------------- */
 function renderCases() {
   const casesDiv = document.getElementById("cases");
   casesDiv.innerHTML = "";
@@ -45,11 +45,10 @@ function renderCases() {
   });
 }
 
-/* ---------------- CASE CLICK ---------------- */
+/* ---------------- CLICK ---------------- */
 function handleCaseClick(index, div) {
   if (opened.includes(index)) return;
 
-  // select player case
   if (playerCase === null) {
     playerCase = index;
     div.classList.add("player-case");
@@ -75,7 +74,7 @@ function handleCaseClick(index, div) {
   }
 }
 
-/* ---------------- BANKER OFFER ---------------- */
+/* ---------------- BANKER ---------------- */
 function makeOffer() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
@@ -84,14 +83,12 @@ function makeOffer() {
   let sum = remaining.reduce((a, b) => a + b, 0);
   let avg = sum / remaining.length;
 
-  // smooth game-show style curve
   let progression = round / (roundSteps.length - 1);
 
   let multiplier = 0.08 + Math.pow(progression, 2) * 0.95;
 
   let offer = avg * multiplier;
 
-  // late-game boost
   if (remaining.length <= 5) {
     offer = avg * 1.1;
   }
@@ -129,14 +126,14 @@ function noDeal() {
   }
 }
 
-/* ---------------- ROUND DISPLAY ---------------- */
+/* ---------------- ROUND ---------------- */
 function updateRound() {
   document.getElementById("round").innerText =
     "Round " + (round + 1) +
     " (Open " + roundSteps[round] + " cases)";
 }
 
-/* ---------------- FINAL SWAP ---------------- */
+/* ---------------- SWAP ---------------- */
 function swapCase() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
@@ -145,7 +142,7 @@ function swapCase() {
   alert("You swapped and won $" + remaining[0]);
 }
 
-/* ---------------- REVEAL FINAL ---------------- */
+/* ---------------- REVEAL ---------------- */
 function revealFinal() {
   alert("Your case contained $" + shuffled[playerCase]);
 }
@@ -155,26 +152,31 @@ function resetGame() {
   startGame();
 }
 
-/* ---------------- TRACKER (HIGH / LOW BOARD) ---------------- */
+/* ---------------- TRACKER (CROSS OFF + LEFT/RIGHT) ---------------- */
 function updateTracker() {
   let remaining = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
 
-  if (remaining.length === 0) return;
-
-  let sorted = [...remaining].sort((a, b) => a - b);
+  let sorted = [...values];
 
   let mid = Math.ceil(sorted.length / 2);
 
   let low = sorted.slice(0, mid);
-  let high = sorted.slice(mid).reverse();
+  let high = sorted.slice(mid);
+
+  const isOpened = (val) =>
+    opened.some(i => shuffled[i] === val);
 
   document.getElementById("lowList").innerHTML =
-    low.map(v => `<li>$${v}</li>`).join("");
+    low.map(v =>
+      `<li class="${isOpened(v) ? "crossed" : ""}">$${v}</li>`
+    ).join("");
 
   document.getElementById("highList").innerHTML =
-    high.map(v => `<li>$${v}</li>`).join("");
+    high.map(v =>
+      `<li class="${isOpened(v) ? "crossed" : ""}">$${v}</li>`
+    ).join("");
 }
 
 /* ---------------- INIT ---------------- */
