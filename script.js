@@ -11,7 +11,7 @@ let playerCase = null;
 let round = 0;
 const roundSteps = [6,5,4,3,2,1,1,1,1];
 
-let enteringFinalRound = false;
+let gameOver = false;
 
 /* START */
 function startGame() {
@@ -19,7 +19,7 @@ function startGame() {
   opened = [];
   playerCase = null;
   round = 0;
-  enteringFinalRound = false;
+  gameOver = false;
 
   document.getElementById("controls").style.display = "none";
   document.getElementById("endgame").style.display = "none";
@@ -40,9 +40,7 @@ function renderCases() {
     let div = document.createElement("div");
     div.className = "case";
     div.innerText = index + 1;
-
     div.onclick = () => handleCaseClick(index, div);
-
     casesDiv.appendChild(div);
   });
 }
@@ -55,7 +53,7 @@ function getRemainingIndexes() {
 
 /* CLICK */
 function handleCaseClick(index, div) {
-  if (opened.includes(index)) return;
+  if (opened.includes(index) || gameOver) return;
 
   if (playerCase === null) {
     playerCase = index;
@@ -79,9 +77,9 @@ function handleCaseClick(index, div) {
 
   let remaining = getRemainingIndexes();
 
-  /* ROUND 9 LOGIC: open 1 case then go to final decision */
+  /* ROUND 9 FINAL */
   if (round === 8) {
-    document.getElementById("endgame").style.display = "block";
+    showFinalChoice();
     return;
   }
 
@@ -109,18 +107,24 @@ function updateRemainingCounter() {
 
 /* BANKER */
 function makeOffer() {
-  let remaining = shuffled.filter((_, i) =>
+  let remainingValues = shuffled.filter((_, i) =>
     !opened.includes(i) && i !== playerCase
   );
 
-  let avg = remaining.reduce((a,b)=>a+b,0) / remaining.length;
+  let avg = remainingValues.reduce((a,b)=>a+b,0) / remainingValues.length;
+  let max = Math.max(...remainingValues);
 
   let progression = round / (roundSteps.length - 1);
   let multiplier = 0.08 + Math.pow(progression, 2) * 0.95;
 
   let offer = avg * multiplier;
 
-  if (remaining.length <= 5) offer = avg * 1.1;
+  if (remainingValues.length <= 5) {
+    offer = avg * 1.05;
+  }
+
+  // ✅ HARD CAP FIX
+  offer = Math.min(offer, max);
 
   document.getElementById("offer").innerText =
     "Banker Offer: $" + Math.round(offer);
@@ -130,7 +134,13 @@ function makeOffer() {
 
 /* DEAL */
 function deal() {
-  document.getElementById("finalText").innerText = "DEAL!";
+  gameOver = true;
+
+  document.getElementById("controls").style.display = "none";
+  document.getElementById("endgame").style.display = "none";
+
+  document.getElementById("finalText").innerText =
+    "You took the DEAL!";
   document.getElementById("endgame").style.display = "block";
 }
 
@@ -138,7 +148,6 @@ function deal() {
 function noDeal() {
   document.getElementById("controls").style.display = "none";
 
-  // 🔴 AFTER ROUND 8 → ENTER ROUND 9
   if (round === 7) {
     alert("Final Round! Open 1 of the last 3 cases.");
     round = 8;
@@ -147,7 +156,6 @@ function noDeal() {
     return;
   }
 
-  // stop progressing after round 9
   if (round >= 8) return;
 
   round++;
@@ -155,11 +163,17 @@ function noDeal() {
   updateCounter();
 }
 
-/* ROUND DISPLAY */
+/* ROUND */
 function updateRound() {
   document.getElementById("round").innerText =
     "Round " + (round + 1) +
     " (Open " + roundSteps[round] + ")";
+}
+
+/* FINAL CHOICE */
+function showFinalChoice() {
+  document.getElementById("controls").style.display = "none";
+  document.getElementById("endgame").style.display = "block";
 }
 
 /* SWAP */
